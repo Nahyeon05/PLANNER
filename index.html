@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Study Planner</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📒</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -21,12 +22,15 @@ body{
   color:var(--ink);
   font-family:'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   font-size:15px;
+  font-weight:normal;
+  font-synthesis:none;
   letter-spacing:0.03em;
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
 }
 .wrap{max-width:1040px;margin:0 auto;padding:12px}
 .card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px #0001}
+h1,h2,b,strong{font-weight:normal}
 h1{margin:0;font-size:22px;letter-spacing:0.04em}
 h2{margin:0 0 8px;font-size:16px;color:var(--pt);letter-spacing:0.04em}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -35,6 +39,7 @@ h2{margin:0 0 8px;font-size:16px;color:var(--pt);letter-spacing:0.04em}
 button,select,input,textarea{
   font-family:inherit;
   font-size:14px;
+  font-weight:normal;
   color:var(--ink);
   letter-spacing:0.03em;
   line-height:1.4;
@@ -122,7 +127,6 @@ input:disabled,textarea:disabled{background:#faf9f7;color:#555;border-color:#e6e
 }
 .ck input.subj{
   font-size:13px;
-  font-weight:bold;
   text-align:center;
   border-right:1px solid #e2e2e2;
   padding:4px;
@@ -273,7 +277,6 @@ let hlColor = COLORS[0]; // 체크리스트 형광펜 색상 ('' 이면 형광�
 const unlocked = new Set();
 const canEdit = () => unlocked.has(cur);
 
-// s: 과목(subject), c: 할일(content), h: 형광펜 색상(highlight), f: 달성표시(flag)
 const blank = date => ({
   date,
   dday:'',
@@ -283,7 +286,6 @@ const blank = date => ({
   blocks:[]
 });
 const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-// 형광펜 파스텔 톤 배경 변환
 const hlBg = hex => hex ? `color-mix(in srgb, ${hex} 26%, #ffffff)` : '#ffffff';
 
 async function loadPlanners(pick){
@@ -357,7 +359,6 @@ $('cal').onclick = async e => {
     sel = t.dataset.d;
     const loaded = await store.day(cur, sel);
     D = loaded || blank(sel);
-    // 기존 데이터 호환 처리 (s, h 필드가 없는 구버전 데이터 보정)
     D.tasks = (D.tasks || []).map(x => ({s: x.s||'', c: x.c||'', h: x.h||'', f: x.f||0}));
     while (D.tasks.length < 10) D.tasks.push({s:'',c:'',h:'',f:0});
     drawCal();
@@ -374,7 +375,6 @@ function drawSheet(){
   }
   const ed = canEdit(), dis = ed ? '' : 'disabled';
 
-  // 타임테이블 셀 계산
   const cells = Array(144).fill(null);
   D.blocks.forEach(b => {
     let s=idx(b.s), e=idx(b.e);
@@ -386,7 +386,6 @@ function drawSheet(){
     return x ? `<i style="background:${x.b.color}" title="${esc(x.b.label)}">${x.first?esc(x.b.label):''}</i>` : '<i></i>';
   }).join('') + '</div>').join('');
 
-  // 체크리스트에서 과목+형광펜이 지정된 항목들을 타임테이블 퀵버튼으로 추출 (중복 제거)
   const quickSubjects = [];
   const seenSubj = new Set();
   D.tasks.forEach(t => {
@@ -405,7 +404,6 @@ function drawSheet(){
     </div>
 
     <div class="sheet" style="margin-top:12px">
-      <!-- 왼쪽 영역: D-DAY, STUDY TIME, CHECK LIST, DIARY -->
       <div>
         <div class="fld"><label>D-DAY</label><input data-f="dday" value="${esc(D.dday)}" ${dis} placeholder="예: D-30 기말고사"></div>
         <div class="fld"><label>STUDY TIME</label><input data-f="study" value="${esc(D.study)}" ${dis} placeholder="예: 6시간 30분"></div>
@@ -442,7 +440,6 @@ function drawSheet(){
         <textarea data-f="diary" ${dis} placeholder="오늘 공부 어땠나요?">${esc(D.diary)}</textarea>
       </div>
 
-      <!-- 오른쪽 영역: TIME TABLE -->
       <div>
         <h2>TIME TABLE <span class="note">(6시 시작 · 한 칸 10분)</span></h2>
         <div class="tt">${rows}</div>
@@ -516,26 +513,22 @@ $('sheet').addEventListener('click', async e => {
 
   if (!canEdit()) return;
 
-  // 체크리스트 달성 기호 (✓, △, ✕)
   if (t.dataset.k) {
     const [i,v] = t.dataset.k.split(':');
     D.tasks[i].f = D.tasks[i].f == v ? 0 : +v;
     touch();
     drawSheet();
   }
-  // 체크리스트 상단 형광펜 팔레트 선택
   else if (t.dataset.hl !== undefined) {
     hlColor = t.dataset.hl;
     drawSheet();
   }
-  // 체크리스트 개별 행에 형광펜 칠하기/토글
   else if (t.dataset.hi !== undefined) {
     const idxRow = +t.dataset.hi;
     D.tasks[idxRow].h = (D.tasks[idxRow].h === hlColor) ? '' : hlColor;
     touch();
     drawSheet();
   }
-  // 타임테이블 과목 퀵버튼 클릭 시 색상 + 과목명 동시 세팅
   else if (t.dataset.qcolor) {
     color = t.dataset.qcolor;
     const lbl = t.dataset.qlabel;
@@ -543,18 +536,15 @@ $('sheet').addEventListener('click', async e => {
     const blInput = $('bl');
     if (blInput) blInput.value = lbl;
   }
-  // 타임테이블 팔레트 색상 선택
   else if (t.dataset.c) {
     color = t.dataset.c;
     drawSheet();
   }
-  // 타임테이블 블록 삭제
   else if (t.dataset.del !== undefined) {
     D.blocks.splice(+t.dataset.del,1);
     touch();
     drawSheet();
   }
-  // 타임테이블 블록 추가
   else if (t.id === 'badd') {
     const s = $('bs').value, en = $('be').value;
     if (!s || !en || s === en) return alert('시간을 확인해주세요');
