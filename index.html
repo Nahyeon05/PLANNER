@@ -34,6 +34,17 @@ h2{margin:0 0 10px;font-size:16.5px;font-weight:700;color:var(--pt);letter-spaci
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .sp{flex:1}
 
+.badge{
+  font-size:12.5px;
+  font-weight:600;
+  padding:4px 10px;
+  border-radius:12px;
+  background:#f1f1f1;
+  color:#666;
+}
+.badge.live{background:#e6f7ed;color:#1e8e3e}
+.badge.local{background:#fff3e0;color:#e65100}
+
 button,select,input,textarea{
   font-family:inherit;
   font-size:15.5px;
@@ -85,7 +96,7 @@ input:disabled,textarea:disabled{background:#faf9f7;color:#444;border-color:#e6e
 .fld label{width:96px;color:#777;font-size:13.5px;font-weight:600}
 .fld input{flex:1;border:0;background:none;padding:4px 6px;font-size:15.5px}
 
-/* 체크리스트 (형광펜 + 과목 + 할일 + ✓△✕) */
+/* 체크리스트 */
 .ckh{
   display:grid;
   grid-template-columns:32px 86px 1fr 34px 34px 34px;
@@ -195,6 +206,7 @@ textarea{width:100%;min-height:150px;resize:vertical;margin-top:6px;padding:12px
   <div class="card">
     <div class="row">
       <h1>📒 Study Planner</h1>
+      <span id="syncBadge" class="badge">확인 중...</span>
       <span class="sp"></span>
       <select id="pSel"></select>
       <button class="main" id="newP">+ 내 플래너</button>
@@ -213,16 +225,31 @@ textarea{width:100%;min-height:150px;resize:vertical;margin-top:6px;padding:12px
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-// ===== Firebase 설정값을 여기에 붙여넣으세요 (비워두면 이 기기 안에서만 저장되는 체험 모드) =====
-const cfg = { apiKey:"YOUR_API_KEY", authDomain:"", projectId:"", appId:"" };
-// =====================================================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyBJYzXmzvO7gSHBj-slZ-eCfpQWm6FHmJk",
+  authDomain: "study-planner-80ff8.firebaseapp.com",
+  projectId: "study-planner-80ff8",
+  storageBucket: "study-planner-80ff8.firebasestorage.app",
+  messagingSenderId: "568125095830",
+  appId: "1:568125095830:web:1126a1e32b8cd65aed27b7",
+  measurementId: "G-MY0SDWP1HQ"
+};
 
-const FB = cfg.apiKey && !cfg.apiKey.startsWith("YOUR");
+const FB = Boolean(firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("YOUR") && firebaseConfig.projectId);
 const pad = n => String(n).padStart(2,'0');
 const ymd = (y,m,d) => `${y}-${pad(m)}-${pad(d)}`;
 const sid = s => s.trim().replace(/\//g,'-');
 const hash = async (id,pw) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(id+'::'+pw)))].map(b=>b.toString(16).padStart(2,'0')).join('');
 const $ = id => document.getElementById(id);
+
+const badge = $('syncBadge');
+if (FB) {
+  badge.textContent = '☁️ 실시간 공유 모드';
+  badge.className = 'badge live';
+} else {
+  badge.textContent = '📱 내 기기 전용 (Firebase 키 미입력)';
+  badge.className = 'badge local';
+}
 
 // ----- 포인트 컬러 -----
 const PTS = ['#e8505b','#f59e42','#6fcf97','#56b6c2','#5b8def','#9b7ede','#ff7eb6'];
@@ -240,12 +267,22 @@ setPt(localStorage.pt || PTS[0]);
 // ----- 저장소 -----
 let store;
 if (FB) {
-  firebase.initializeApp(cfg);
+  firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore(), P = id => db.collection('planners').doc(id);
+  const handleErr = err => {
+    console.error(err);
+    alert('Firebase 서버 연결에 실패했습니다.\nFirestore Database가 생성되었는지, 그리고 규칙(Rules)이 "allow read, write: if true;"로 게시되었는지 확인해주세요.\n\n오류 내용: ' + err.message);
+  };
   store = {
-    async planners(){ return (await db.collection('planners').get()).docs.map(d=>d.id); },
+    async planners(){
+      try { return (await db.collection('planners').get()).docs.map(d=>d.id); }
+      catch(e) { handleErr(e); return []; }
+    },
     async pw(id){ const d = await P(id).get(); return d.exists ? d.data().pw : null; },
-    async newP(id,pw){ await P(id).set({pw}); },
+    async newP(id,pw){
+      try { await P(id).set({pw}); }
+      catch(e) { handleErr(e); throw e; }
+    },
     async delP(id){
       const snap = await P(id).collection('days').get();
       await Promise.all(snap.docs.map(doc => doc.ref.delete()));
@@ -253,7 +290,10 @@ if (FB) {
     },
     async days(id,a,b){ return (await P(id).collection('days').where('date','>=',a).where('date','<=',b).get()).docs.map(d=>d.data().date); },
     async day(id,d){ const x = await P(id).collection('days').doc(d).get(); return x.exists ? x.data() : null; },
-    async save(id,d,o){ await P(id).collection('days').doc(d).set(o); }
+    async save(id,d,o){
+      try { await P(id).collection('days').doc(d).set(o); }
+      catch(e) { handleErr(e); }
+    }
   };
 } else {
   const L = () => JSON.parse(localStorage.sp || '{}'), S = o => localStorage.sp = JSON.stringify(o);
