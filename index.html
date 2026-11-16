@@ -6,214 +6,565 @@
 <title>Study Planner</title>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f7f5f2;--card:#fff;--ink:#444;--line:#cfcfcf;--pt:#e8505b;--soft:color-mix(in srgb,var(--pt) 12%,white)}
+:root{
+  --bg:#f7f5f2;
+  --card:#fff;
+  --ink:#3d3d3d;
+  --line:#cfcfcf;
+  --pt:#e8505b;
+  --soft:color-mix(in srgb,var(--pt) 12%,white);
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'Jua','Apple SD Gothic Neo',sans-serif;font-size:15px}
-.wrap{max-width:1000px;margin:0 auto;padding:12px}
-.card{background:var(--card);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px #0001}
-h1{margin:0;font-size:22px}h2{margin:0 0 8px;font-size:16px;color:var(--pt)}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sp{flex:1}
-button,select,input,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
-button{border:0;background:var(--soft);color:var(--pt);border-radius:20px;padding:7px 14px;cursor:pointer}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  font-size:15px;
+  letter-spacing:0.03em;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1040px;margin:0 auto;padding:12px}
+.card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px #0001}
+h1{margin:0;font-size:22px;letter-spacing:0.04em}
+h2{margin:0 0 8px;font-size:16px;color:var(--pt);letter-spacing:0.04em}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sp{flex:1}
+
+button,select,input,textarea{
+  font-family:inherit;
+  font-size:14px;
+  color:var(--ink);
+  letter-spacing:0.03em;
+  line-height:1.4;
+}
+button{
+  border:0;
+  background:var(--soft);
+  color:var(--pt);
+  border-radius:20px;
+  padding:7px 14px;
+  cursor:pointer;
+  transition:opacity .15s;
+}
+button:hover{opacity:.88}
 button.main{background:var(--pt);color:#fff}
-select,input,textarea{border:1px solid var(--line);border-radius:10px;padding:6px 8px;background:#fff;min-width:0}
+button.del-btn{background:#f1f1f1;color:#777}
+button.del-btn:hover{background:#ffe5e5;color:#d93025}
+
+select,input,textarea{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:6px 9px;
+  background:#fff;
+  min-width:0;
+}
 input:disabled,textarea:disabled{background:#faf9f7;color:#555;border-color:#e6e6e6}
+
+/* 달력 */
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
 .cal div{text-align:center;padding:8px 0;border-radius:10px;cursor:pointer;position:relative}
 .cal .h{cursor:default;color:#999;font-size:12px;padding:2px}
-.cal .d:hover{background:var(--soft)}.cal .sel{background:var(--pt);color:#fff}
-.cal .today{outline:2px solid var(--pt)}.cal .has::after{content:'';position:absolute;bottom:3px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:#f5a623}
-.months{display:flex;gap:4px;overflow-x:auto;margin-top:8px}.months button{padding:5px 10px;flex:none;background:#f1f1f1;color:#777}
+.cal .d:hover{background:var(--soft)}
+.cal .sel{background:var(--pt);color:#fff}
+.cal .today{outline:2px solid var(--pt)}
+.cal .has::after{content:'';position:absolute;bottom:3px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:#f5a623}
+.months{display:flex;gap:4px;overflow-x:auto;margin-top:8px}
+.months button{padding:5px 10px;flex:none;background:#f1f1f1;color:#777}
 .months button.on{background:var(--pt);color:#fff}
-.sheet{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
-@media(max-width:720px){.sheet{grid-template-columns:1fr}}
-.fld{display:flex;align-items:center;gap:8px;border-bottom:1.5px solid #bbb;padding:5px 0}.fld label{width:80px;color:#888;font-size:12px}.fld input{flex:1;border:0;background:none}
-.ck{display:grid;grid-template-columns:1fr 32px 32px 32px;border:1.5px solid #aaa;border-radius:8px;overflow:hidden}
-.ck>*{border:0;border-bottom:1px solid var(--line);border-radius:0;height:36px}
-.ck button{background:#fff;color:#bbb;font-size:16px;padding:0;border-left:1px solid var(--line)}
+
+/* 플래너 시트 레이아웃 */
+.sheet{display:grid;grid-template-columns:1.35fr 1fr;gap:18px}
+@media(max-width:780px){.sheet{grid-template-columns:1fr}}
+
+.fld{display:flex;align-items:center;gap:8px;border-bottom:1.5px solid #bbb;padding:5px 0}
+.fld label{width:88px;color:#888;font-size:12px}
+.fld input{flex:1;border:0;background:none;padding:4px 6px}
+
+/* 체크리스트 (형광펜 + 과목 + 할일 + ✓△✕) */
+.ckh{
+  display:grid;
+  grid-template-columns:28px 74px 1fr 30px 30px 30px;
+  font-size:12px;
+  color:#999;
+  text-align:center;
+  margin-bottom:3px;
+}
+.ck{
+  display:grid;
+  grid-template-columns:28px 74px 1fr 30px 30px 30px;
+  border:1.5px solid #aaa;
+  border-radius:8px;
+  overflow:hidden;
+}
+.ck > *{
+  border:0;
+  border-bottom:1px solid var(--line);
+  border-radius:0;
+  height:36px;
+}
+.ck .hl-cell{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  cursor:pointer;
+  border-right:1px solid #ececec;
+}
+.ck .hl-cell.ro{cursor:default}
+.ck .hl-dot{
+  width:15px;
+  height:15px;
+  border-radius:50%;
+  border:1.5px solid #ccc;
+  display:inline-block;
+}
+.ck input.subj{
+  font-size:13px;
+  font-weight:bold;
+  text-align:center;
+  border-right:1px solid #e2e2e2;
+  padding:4px;
+}
+.ck input.todo{
+  padding:4px 8px;
+}
+.ck button{
+  background:#fff;
+  color:#bbb;
+  font-size:15px;
+  padding:0;
+  border-left:1px solid var(--line);
+}
 .ck button.on{background:var(--pt);color:#fff}
-.ckh{display:grid;grid-template-columns:1fr 32px 32px 32px;font-size:13px;color:#999;text-align:center;margin-bottom:2px}
-textarea{width:100%;min-height:150px;resize:vertical;margin-top:6px}
+
+textarea{width:100%;min-height:140px;resize:vertical;margin-top:6px;padding:10px}
+
+/* 타임테이블 */
 .tt{border:1.5px solid #aaa;border-radius:8px;overflow:hidden}
 .tr{display:grid;grid-template-columns:30px repeat(6,1fr);height:24px;border-bottom:1px solid #e3e3e3}
-.tr:last-child{border:0}.tr span{font-size:11px;color:#999;text-align:center;line-height:24px;border-right:1px solid #ddd}
-.tr i{border-right:1px solid #eee;font-style:normal;font-size:10px;overflow:visible;white-space:nowrap;color:#fff;position:relative;z-index:1;padding-left:2px;line-height:24px}
-.sw{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.sw b{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid #fff;box-shadow:0 0 0 1px #ccc}.sw b.on{box-shadow:0 0 0 2px #444}
-.sw input[type=color]{width:34px;height:30px;padding:0;border-radius:50%;border:0;background:none;cursor:pointer}
-.bl{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px}.bl u{width:14px;height:14px;border-radius:4px;flex:none}
+.tr:last-child{border:0}
+.tr span{font-size:11px;color:#999;text-align:center;line-height:24px;border-right:1px solid #ddd}
+.tr i{
+  border-right:1px solid #eee;
+  font-style:normal;
+  font-size:11px;
+  overflow:visible;
+  white-space:nowrap;
+  color:#fff;
+  text-shadow:0 1px 2px #0004;
+  position:relative;
+  z-index:1;
+  padding-left:3px;
+  line-height:24px;
+}
+
+/* 컬러 팔레트 및 과목 퀵태그 */
+.sw{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sw b{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2.5px solid #fff;box-shadow:0 0 0 1px #ccc}
+.sw b.on{box-shadow:0 0 0 2px #444;transform:scale(1.08)}
+.sw b.none-swatch{
+  background:linear-gradient(135deg,#fff 44%,#e8505b 48%,#e8505b 52%,#fff 56%);
+}
+.sw input[type=color]{width:32px;height:28px;padding:0;border-radius:50%;border:0;background:none;cursor:pointer}
+
+.quick-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.quick-tags button{
+  padding:3px 10px;
+  font-size:12px;
+  border-radius:12px;
+  border:1px solid #0001;
+  color:#333;
+}
+
+.bl{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;border-bottom:1px dashed #eee}
+.bl u{width:14px;height:14px;border-radius:4px;flex:none}
 .note{font-size:12px;color:#999}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
-      <div class="row">
-            <h1>📒 Study Planner</h1><span class="sp"></span>
-                  <select id="pSel"></select>
-                        <button class="main" id="newP">+ 내 플래너</button>
-                            </div>
-                                <div class="sw" style="margin-top:10px"><span class="note">포인트 컬러</span><span id="pts" class="sw"></span><input type="color" id="pc" title="직접 고르기"></div>
-                                  </div>
-                                    <div class="card" id="cal"></div>
-                                      <div class="card" id="sheet"></div>
-                                      </div>
+    <div class="row">
+      <h1>📒 Study Planner</h1>
+      <span class="sp"></span>
+      <select id="pSel"></select>
+      <button class="main" id="newP">+ 내 플래너</button>
+      <button class="del-btn" id="delP" title="현재 플래너 삭제">삭제</button>
+    </div>
+    <div class="sw" style="margin-top:10px">
+      <span class="note">포인트 컬러</span>
+      <span id="pts" class="sw"></span>
+      <input type="color" id="pc" title="직접 고르기">
+    </div>
+  </div>
+  <div class="card" id="cal"></div>
+  <div class="card" id="sheet"></div>
+</div>
 
-                                      <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-                                      <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-                                      <script>
-                                      // ===== Firebase 설정값을 여기에 붙여넣으세요 (비워두면 이 기기 안에서만 저장되는 체험 모드) =====
-                                      const cfg = { apiKey:"YOUR_API_KEY", authDomain:"", projectId:"", appId:"" };
-                                      // =====================================================================================
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// ===== Firebase 설정값을 여기에 붙여넣으세요 (비워두면 이 기기 안에서만 저장되는 체험 모드) =====
+const cfg = { apiKey:"YOUR_API_KEY", authDomain:"", projectId:"", appId:"" };
+// =====================================================================================
 
-                                      const FB = cfg.apiKey && !cfg.apiKey.startsWith("YOUR");
-                                      const pad = n => String(n).padStart(2,'0');
-                                      const ymd = (y,m,d) => `${y}-${pad(m)}-${pad(d)}`;
-                                      const sid = s => s.trim().replace(/\//g,'-');
-                                      const hash = async (id,pw) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(id+'::'+pw)))].map(b=>b.toString(16).padStart(2,'0')).join('');
-                                      const $ = id => document.getElementById(id);
+const FB = cfg.apiKey && !cfg.apiKey.startsWith("YOUR");
+const pad = n => String(n).padStart(2,'0');
+const ymd = (y,m,d) => `${y}-${pad(m)}-${pad(d)}`;
+const sid = s => s.trim().replace(/\//g,'-');
+const hash = async (id,pw) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(id+'::'+pw)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+const $ = id => document.getElementById(id);
 
-                                      // ----- 포인트 컬러 -----
-                                      const PTS = ['#e8505b','#f59e42','#6fcf97','#56b6c2','#5b8def','#9b7ede','#ff7eb6'];
-                                      function setPt(c){ document.documentElement.style.setProperty('--pt', c); try{localStorage.pt = c}catch(e){} $('pc').value = c; }
-                                      $('pts').innerHTML = PTS.map(c=>`<b data-p="${c}" style="background:${c}"></b>`).join('');
-                                      $('pts').onclick = e => { if (e.target.dataset.p) setPt(e.target.dataset.p); };
-                                      $('pc').oninput = e => setPt(e.target.value);
-                                      setPt(localStorage.pt || PTS[0]);
+// ----- 포인트 컬러 -----
+const PTS = ['#e8505b','#f59e42','#6fcf97','#56b6c2','#5b8def','#9b7ede','#ff7eb6'];
+function setPt(c){
+  document.documentElement.style.setProperty('--pt', c);
+  try{ localStorage.pt = c; }catch(e){}
+  $('pc').value = c;
+}
+$('pts').innerHTML = PTS.map(c=>`<b data-p="${c}" style="background:${c}"></b>`).join('');
+$('pts').onclick = e => { if (e.target.dataset.p) setPt(e.target.dataset.p); };
+$('pc').oninput = e => setPt(e.target.value);
+setPt(localStorage.pt || PTS[0]);
 
-                                      // ----- 저장소 -----
-                                      let store;
-                                      if (FB) {
-                                        firebase.initializeApp(cfg);
-                                          const db = firebase.firestore(), P = id => db.collection('planners').doc(id);
-                                            store = {
-                                                async planners(){ return (await db.collection('planners').get()).docs.map(d=>d.id) },
-                                                    async pw(id){ const d = await P(id).get(); return d.exists ? d.data().pw : null },
-                                                        async newP(id,pw){ await P(id).set({pw}) },
-                                                            async days(id,a,b){ return (await P(id).collection('days').where('date','>=',a).where('date','<=',b).get()).docs.map(d=>d.data().date) },
-                                                                async day(id,d){ const x = await P(id).collection('days').doc(d).get(); return x.exists ? x.data() : null },
-                                                                    async save(id,d,o){ await P(id).collection('days').doc(d).set(o) }
-                                                                      };
-                                                                      } else {
-                                                                        const L = () => JSON.parse(localStorage.sp || '{}'), S = o => localStorage.sp = JSON.stringify(o);
-                                                                          store = {
-                                                                              async planners(){ return Object.keys(L()) },
-                                                                                  async pw(id){ return (L()[id]||{}).pw ?? null },
-                                                                                      async newP(id,pw){ const o=L(); o[id]={pw,days:{}}; S(o) },
-                                                                                          async days(id,a,b){ return Object.keys(L()[id].days).filter(k=>k>=a&&k<=b) },
-                                                                                              async day(id,d){ return L()[id].days[d] || null },
-                                                                                                  async save(id,d,o){ const x=L(); x[id].days[d]=o; S(x) }
-                                                                                                    };
-                                                                                                    }
+// ----- 저장소 -----
+let store;
+if (FB) {
+  firebase.initializeApp(cfg);
+  const db = firebase.firestore(), P = id => db.collection('planners').doc(id);
+  store = {
+    async planners(){ return (await db.collection('planners').get()).docs.map(d=>d.id); },
+    async pw(id){ const d = await P(id).get(); return d.exists ? d.data().pw : null; },
+    async newP(id,pw){ await P(id).set({pw}); },
+    async delP(id){
+      const snap = await P(id).collection('days').get();
+      await Promise.all(snap.docs.map(doc => doc.ref.delete()));
+      await P(id).delete();
+    },
+    async days(id,a,b){ return (await P(id).collection('days').where('date','>=',a).where('date','<=',b).get()).docs.map(d=>d.data().date); },
+    async day(id,d){ const x = await P(id).collection('days').doc(d).get(); return x.exists ? x.data() : null; },
+    async save(id,d,o){ await P(id).collection('days').doc(d).set(o); }
+  };
+} else {
+  const L = () => JSON.parse(localStorage.sp || '{}'), S = o => localStorage.sp = JSON.stringify(o);
+  store = {
+    async planners(){ return Object.keys(L()); },
+    async pw(id){ return (L()[id]||{}).pw ?? null; },
+    async newP(id,pw){ const o=L(); o[id]={pw,days:{}}; S(o); },
+    async delP(id){ const o=L(); delete o[id]; S(o); },
+    async days(id,a,b){ return Object.keys((L()[id]||{}).days||{}).filter(k=>k>=a&&k<=b); },
+    async day(id,d){ return ((L()[id]||{}).days||{})[d] || null; },
+    async save(id,d,o){ const x=L(); if(!x[id]) return; x[id].days[d]=o; S(x); }
+  };
+}
 
-                                                                                                    const COLORS = ['#e8505b','#f59e42','#f2c94c','#6fcf97','#56b6c2','#5b8def','#9b7ede','#8a8a8a'];
-                                                                                                    const HOURS = [...Array(24)].map((_,i)=>(6+i)%24);
-                                                                                                    const idx = t => { const [h,m]=t.split(':').map(Number); return Math.floor((((h*60+m)-360+1440)%1440)/10) };
-                                                                                                    const MARKS = ['✓','△','✕'];
-                                                                                                    const now = new Date();
-                                                                                                    let cur = null, Y = now.getFullYear(), M = now.getMonth()+1, sel = null, D = null, marks = new Set(), color = COLORS[0];
-                                                                                                    const unlocked = new Set();
-                                                                                                    const canEdit = () => unlocked.has(cur);
-                                                                                                    const blank = date => ({date, dday:'', study:'', diary:'', tasks:[...Array(10)].map(()=>({c:'',f:0})), blocks:[]});
-                                                                                                    const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// 타임테이블 & 형광펜 공통 색상 (8색)
+const COLORS = ['#e8505b','#f59e42','#f2c94c','#6fcf97','#56b6c2','#5b8def','#9b7ede','#8a8a8a'];
+const HOURS = [...Array(24)].map((_,i)=>(6+i)%24);
+const idx = t => { const [h,m]=t.split(':').map(Number); return Math.floor((((h*60+m)-360+1440)%1440)/10); };
+const MARKS = ['✓','△','✕'];
+const now = new Date();
 
-                                                                                                    async function loadPlanners(pick){
-                                                                                                      const list = await store.planners();
-                                                                                                        $('pSel').innerHTML = list.length ? list.map(p=>`<option>${p}</option>`).join('') : '<option value="">(플래너 없음)</option>';
-                                                                                                          if (pick) $('pSel').value = pick;
-                                                                                                            cur = $('pSel').value || null; sel = null; D = null;
-                                                                                                              await drawCal(); drawSheet();
-                                                                                                              }
-                                                                                                              $('pSel').onchange = () => { cur = $('pSel').value; sel = null; D = null; drawCal(); drawSheet(); };
-                                                                                                              $('newP').onclick = async () => {
-                                                                                                                const name = sid(prompt('플래너 이름 (예: 나현)') || ''); if (!name) return;
-                                                                                                                  if (await store.pw(name) !== null) return alert('이미 있는 이름이에요.');
-                                                                                                                    const pw = prompt('수정할 때 쓸 비밀번호를 정해주세요'); if (!pw) return;
-                                                                                                                      await store.newP(name, await hash(name,pw)); unlocked.add(name); loadPlanners(name);
-                                                                                                                      };
+let cur = null, Y = now.getFullYear(), M = now.getMonth()+1, sel = null, D = null, marks = new Set();
+let color = COLORS[0];   // 타임테이블 블록 색상
+let hlColor = COLORS[0]; // 체크리스트 형광펜 색상 ('' 이면 형광펜 지우기)
+const unlocked = new Set();
+const canEdit = () => unlocked.has(cur);
 
-                                                                                                                      async function drawCal(){
-                                                                                                                        if (!cur) { $('cal').innerHTML = '<div class="note">위의 “+ 내 플래너”로 플래너를 만들어보세요!</div>'; return; }
-                                                                                                                          const last = new Date(Y,M,0).getDate();
-                                                                                                                            marks = new Set(await store.days(cur, ymd(Y,M,1), ymd(Y,M,last)));
-                                                                                                                              const first = new Date(Y,M-1,1).getDay(), td = ymd(now.getFullYear(),now.getMonth()+1,now.getDate());
-                                                                                                                                let g = ['일','월','화','수','목','금','토'].map(d=>`<div class="h">${d}</div>`).join('') + '<div></div>'.repeat(first);
-                                                                                                                                  for (let d=1; d<=last; d++){ const k=ymd(Y,M,d);
-                                                                                                                                      g += `<div class="d ${marks.has(k)?'has':''} ${k===sel?'sel':''} ${k===td?'today':''}" data-d="${k}">${d}</div>`; }
-                                                                                                                                        $('cal').innerHTML = `<div class="row"><h2 style="margin:0">${esc(cur)}의 플래너</h2><span class="sp"></span>
-                                                                                                                                            <button data-y="-1">◀</button><b>${Y}년</b><button data-y="1">▶</button></div>
-                                                                                                                                                <div class="months">${[...Array(12)].map((_,i)=>`<button class="${i+1===M?'on':''}" data-m="${i+1}">${i+1}월</button>`).join('')}</div>
-                                                                                                                                                    <div class="cal">${g}</div>`;
-                                                                                                                                                    }
-                                                                                                                                                    $('cal').onclick = async e => {
-                                                                                                                                                      const t = e.target;
-                                                                                                                                                        if (t.dataset.y) { Y += +t.dataset.y; drawCal(); }
-                                                                                                                                                          else if (t.dataset.m) { M = +t.dataset.m; drawCal(); }
-                                                                                                                                                            else if (t.dataset.d) { sel = t.dataset.d; D = (await store.day(cur, sel)) || blank(sel); drawCal(); drawSheet(); $('sheet').scrollIntoView({behavior:'smooth'}); }
-                                                                                                                                                            };
+// s: 과목(subject), c: 할일(content), h: 형광펜 색상(highlight), f: 달성표시(flag)
+const blank = date => ({
+  date,
+  dday:'',
+  study:'',
+  diary:'',
+  tasks:[...Array(10)].map(()=>({s:'',c:'',h:'',f:0})),
+  blocks:[]
+});
+const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// 형광펜 파스텔 톤 배경 변환
+const hlBg = hex => hex ? `color-mix(in srgb, ${hex} 26%, #ffffff)` : '#ffffff';
 
-                                                                                                                                                            function drawSheet(){
-                                                                                                                                                              const el = $('sheet');
-                                                                                                                                                                if (!cur || !D) { el.innerHTML = cur ? '<div class="note">달력에서 날짜를 눌러 플래너를 열어보세요 📅</div>' : ''; return; }
-                                                                                                                                                                  const ed = canEdit(), dis = ed ? '' : 'disabled';
-                                                                                                                                                                    const cells = Array(144).fill(null);
-                                                                                                                                                                      D.blocks.forEach(b => { let s=idx(b.s), e=idx(b.e); if (e<=s) e+=144; for (let i=s;i<e;i++) cells[i%144] = {b, first:i===s}; });
-                                                                                                                                                                        const rows = HOURS.map((h,r) => `<div class="tr"><span>${h%12||12}</span>` + [...Array(6)].map((_,c) => {
-                                                                                                                                                                            const x = cells[r*6+c]; return x ? `<i style="background:${x.b.color}" title="${esc(x.b.label)}">${x.first?esc(x.b.label):''}</i>` : '<i></i>'; }).join('') + '</div>').join('');
-                                                                                                                                                                              el.innerHTML = `
-                                                                                                                                                                                <div class="row"><h2 style="margin:0;font-size:20px">DAILY PLAN · ${D.date}</h2><span class="sp"></span>
-                                                                                                                                                                                    <button id="lock" class="${ed?'main':''}">${ed?'🔓 수정 중 (잠그기)':'🔒 비번으로 수정'}</button></div>
-                                                                                                                                                                                      <div class="sheet" style="margin-top:10px">
-                                                                                                                                                                                          <div>
-                                                                                                                                                                                                <div class="fld"><label>D-DAY</label><input data-f="dday" value="${esc(D.dday)}" ${dis} placeholder="예: D-30 수능"></div>
-                                                                                                                                                                                                      <div class="fld"><label>STUDY TIME</label><input data-f="study" value="${esc(D.study)}" ${dis} placeholder="예: 6시간 30분"></div>
-                                                                                                                                                                                                            <h2 style="margin-top:14px">CHECK LIST</h2>
-                                                                                                                                                                                                                  <div class="ckh"><span></span><span>✓</span><span>△</span><span>✕</span></div>
-                                                                                                                                                                                                                        <div class="ck">${D.tasks.map((t,i)=>`
-                                                                                                                                                                                                                                <input data-t="${i}" value="${esc(t.c)}" ${dis} placeholder="바로 적어보세요">
-                                                                                                                                                                                                                                        ${MARKS.map((m,k)=>`<button data-k="${i}:${k+1}" class="${t.f==k+1?'on':''}">${m}</button>`).join('')}`).join('')}</div>
-                                                                                                                                                                                                                                              <h2 style="margin-top:14px">STUDY DIARY</h2>
-                                                                                                                                                                                                                                                    <textarea data-f="diary" ${dis} placeholder="오늘 공부 어땠나요?">${esc(D.diary)}</textarea>
-                                                                                                                                                                                                                                                        </div>
-                                                                                                                                                                                                                                                            <div>
-                                                                                                                                                                                                                                                                  <h2>TIME TABLE <span class="note">(6시 시작 · 한 칸 10분)</span></h2>
-                                                                                                                                                                                                                                                                        <div class="tt">${rows}</div>
-                                                                                                                                                                                                                                                                              ${ed ? `<div class="card" style="margin-top:10px;padding:10px;box-shadow:none;border:1px solid #eee">
-                                                                                                                                                                                                                                                                                      <div class="row"><input type="time" id="bs" value="09:00"> ~ <input type="time" id="be" value="10:00"></div>
-                                                                                                                                                                                                                                                                                              <div class="sw" style="margin:8px 0">${COLORS.map(c=>`<b data-c="${c}" class="${c===color?'on':''}" style="background:${c}"></b>`).join('')}</div>
-                                                                                                                                                                                                                                                                                                      <div class="row"><input id="bl" class="sp" placeholder="무슨 공부? (예: 수학)"><button class="main" id="badd">추가</button></div></div>` : ''}
-                                                                                                                                                                                                                                                                                                            <div style="margin-top:8px">${D.blocks.map((b,i)=>`<div class="bl"><u style="background:${b.color}"></u>${b.s}~${b.e} ${esc(b.label)}${ed?` <button data-del="${i}" style="padding:2px 8px;margin-left:auto">삭제</button>`:''}</div>`).join('')}</div>
-                                                                                                                                                                                                                                                                                                                </div>
-                                                                                                                                                                                                                                                                                                                  </div>`;
-                                                                                                                                                                                                                                                                                                                  }
+async function loadPlanners(pick){
+  const list = await store.planners();
+  $('pSel').innerHTML = list.length ? list.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('') : '<option value="">(플래너 없음)</option>';
+  if (pick && list.includes(pick)) $('pSel').value = pick;
+  cur = $('pSel').value || null;
+  sel = null;
+  D = null;
+  await drawCal();
+  drawSheet();
+}
 
-                                                                                                                                                                                                                                                                                                                  let timer;
-                                                                                                                                                                                                                                                                                                                  function touch(){ clearTimeout(timer); timer = setTimeout(async () => { await store.save(cur, D.date, D); if (D.date.startsWith(ymd(Y,M,1).slice(0,7))) { marks.add(D.date); drawCal(); } }, 500); }
+$('pSel').onchange = () => { cur = $('pSel').value; sel = null; D = null; drawCal(); drawSheet(); };
 
-                                                                                                                                                                                                                                                                                                                  $('sheet').addEventListener('input', e => {
-                                                                                                                                                                                                                                                                                                                    const t = e.target; if (!canEdit()) return;
-                                                                                                                                                                                                                                                                                                                      if (t.dataset.f) D[t.dataset.f] = t.value;
-                                                                                                                                                                                                                                                                                                                        else if (t.dataset.t) D.tasks[t.dataset.t].c = t.value;
-                                                                                                                                                                                                                                                                                                                          touch();
-                                                                                                                                                                                                                                                                                                                          });
-                                                                                                                                                                                                                                                                                                                          $('sheet').addEventListener('click', async e => {
-                                                                                                                                                                                                                                                                                                                            const t = e.target;
-                                                                                                                                                                                                                                                                                                                              if (t.id === 'lock') {
-                                                                                                                                                                                                                                                                                                                                  if (canEdit()) unlocked.delete(cur);
-                                                                                                                                                                                                                                                                                                                                      else { const pw = prompt('비밀번호를 입력하세요'); if (!pw) return;
-                                                                                                                                                                                                                                                                                                                                            if (await hash(cur,pw) === await store.pw(cur)) unlocked.add(cur); else return alert('비밀번호가 달라요 😢'); }
-                                                                                                                                                                                                                                                                                                                                                return drawSheet();
-                                                                                                                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                                                                                                                    if (!canEdit()) return;
-                                                                                                                                                                                                                                                                                                                                                      if (t.dataset.k) { const [i,v] = t.dataset.k.split(':'); D.tasks[i].f = D.tasks[i].f==v ? 0 : +v; touch(); drawSheet(); }
-                                                                                                                                                                                                                                                                                                                                                        else if (t.dataset.c) { color = t.dataset.c; drawSheet(); }
-                                                                                                                                                                                                                                                                                                                                                          else if (t.dataset.del) { D.blocks.splice(+t.dataset.del,1); touch(); drawSheet(); }
-                                                                                                                                                                                                                                                                                                                                                            else if (t.id === 'badd') {
-                                                                                                                                                                                                                                                                                                                                                                const s=$('bs').value, en=$('be').value; if (!s||!en||s===en) return alert('시간을 확인해주세요');
-                                                                                                                                                                                                                                                                                                                                                                    D.blocks.push({s, e:en, color, label:$('bl').value.trim()||'공부'}); touch(); drawSheet();
-                                                                                                                                                                                                                                                                                                                                                                      }
-                                                                                                                                                                                                                                                                                                                                                                      });
+// 새 플래너 만들기
+$('newP').onclick = async () => {
+  const name = sid(prompt('플래너 이름 (예: 나현)') || '');
+  if (!name) return;
+  if (await store.pw(name) !== null) return alert('이미 있는 이름이에요.');
+  const pw = prompt('수정 및 삭제할 때 쓸 비밀번호를 정해주세요');
+  if (!pw) return;
+  await store.newP(name, await hash(name,pw));
+  unlocked.add(name);
+  loadPlanners(name);
+};
 
-                                                                                                                                                                                                                                                                                                                                                                      loadPlanners();
-                                                                                                                                                                                                                                                                                                                                                                      </script>
-                                                                                                                                                                                                                                                                                                                                                                      </body>
-                                                                                                                                                                                                                                                                                                                                                                      </html>
+// 플래너 삭제하기 (비밀번호 확인)
+$('delP').onclick = async () => {
+  if (!cur) return alert('삭제할 플래너가 없습니다.');
+  const pw = prompt(`"${cur}" 플래너를 삭제하려면 비밀번호를 입력하세요.\n(삭제된 데이터는 복구할 수 없습니다)`);
+  if (!pw) return;
+  if (await hash(cur, pw) !== await store.pw(cur)) {
+    return alert('비밀번호가 일치하지 않아요 😢');
+  }
+  if (!confirm(`정말 "${cur}" 플래너와 모든 기록을 영구 삭제할까요?`)) return;
+  await store.delP(cur);
+  unlocked.delete(cur);
+  alert('플래너가 삭제되었습니다.');
+  loadPlanners();
+};
+
+async function drawCal(){
+  if (!cur) {
+    $('cal').innerHTML = '<div class="note">위의 “+ 내 플래너”로 플래너를 만들어보세요!</div>';
+    return;
+  }
+  const last = new Date(Y,M,0).getDate();
+  marks = new Set(await store.days(cur, ymd(Y,M,1), ymd(Y,M,last)));
+  const first = new Date(Y,M-1,1).getDay();
+  const td = ymd(now.getFullYear(),now.getMonth()+1,now.getDate());
+  let g = ['일','월','화','수','목','금','토'].map(d=>`<div class="h">${d}</div>`).join('') + '<div></div>'.repeat(first);
+  for (let d=1; d<=last; d++){
+    const k=ymd(Y,M,d);
+    g += `<div class="d ${marks.has(k)?'has':''} ${k===sel?'sel':''} ${k===td?'today':''}" data-d="${k}">${d}</div>`;
+  }
+  $('cal').innerHTML = `
+    <div class="row">
+      <h2 style="margin:0">${esc(cur)}의 플래너</h2><span class="sp"></span>
+      <button data-y="-1">◀</button><b>${Y}년</b><button data-y="1">▶</button>
+    </div>
+    <div class="months">${[...Array(12)].map((_,i)=>`<button class="${i+1===M?'on':''}" data-m="${i+1}">${i+1}월</button>`).join('')}</div>
+    <div class="cal">${g}</div>`;
+}
+
+$('cal').onclick = async e => {
+  const t = e.target;
+  if (t.dataset.y) { Y += +t.dataset.y; drawCal(); }
+  else if (t.dataset.m) { M = +t.dataset.m; drawCal(); }
+  else if (t.dataset.d) {
+    sel = t.dataset.d;
+    const loaded = await store.day(cur, sel);
+    D = loaded || blank(sel);
+    // 기존 데이터 호환 처리 (s, h 필드가 없는 구버전 데이터 보정)
+    D.tasks = (D.tasks || []).map(x => ({s: x.s||'', c: x.c||'', h: x.h||'', f: x.f||0}));
+    while (D.tasks.length < 10) D.tasks.push({s:'',c:'',h:'',f:0});
+    drawCal();
+    drawSheet();
+    $('sheet').scrollIntoView({behavior:'smooth'});
+  }
+};
+
+function drawSheet(){
+  const el = $('sheet');
+  if (!cur || !D) {
+    el.innerHTML = cur ? '<div class="note">달력에서 날짜를 눌러 플래너를 열어보세요 📅</div>' : '';
+    return;
+  }
+  const ed = canEdit(), dis = ed ? '' : 'disabled';
+
+  // 타임테이블 셀 계산
+  const cells = Array(144).fill(null);
+  D.blocks.forEach(b => {
+    let s=idx(b.s), e=idx(b.e);
+    if (e<=s) e+=144;
+    for (let i=s;i<e;i++) cells[i%144] = {b, first:i===s};
+  });
+  const rows = HOURS.map((h,r) => `<div class="tr"><span>${h%12||12}</span>` + [...Array(6)].map((_,c) => {
+    const x = cells[r*6+c];
+    return x ? `<i style="background:${x.b.color}" title="${esc(x.b.label)}">${x.first?esc(x.b.label):''}</i>` : '<i></i>';
+  }).join('') + '</div>').join('');
+
+  // 체크리스트에서 과목+형광펜이 지정된 항목들을 타임테이블 퀵버튼으로 추출 (중복 제거)
+  const quickSubjects = [];
+  const seenSubj = new Set();
+  D.tasks.forEach(t => {
+    const label = (t.s || t.c || '').trim();
+    if (label && t.h && !seenSubj.has(label + t.h)) {
+      seenSubj.add(label + t.h);
+      quickSubjects.push({label, color: t.h});
+    }
+  });
+
+  el.innerHTML = `
+    <div class="row">
+      <h2 style="margin:0;font-size:20px">DAILY PLAN · ${D.date}</h2>
+      <span class="sp"></span>
+      <button id="lock" class="${ed?'main':''}">${ed?'🔓 수정 중 (잠그기)':'🔒 비번으로 수정'}</button>
+    </div>
+
+    <div class="sheet" style="margin-top:12px">
+      <!-- 왼쪽 영역: D-DAY, STUDY TIME, CHECK LIST, DIARY -->
+      <div>
+        <div class="fld"><label>D-DAY</label><input data-f="dday" value="${esc(D.dday)}" ${dis} placeholder="예: D-30 기말고사"></div>
+        <div class="fld"><label>STUDY TIME</label><input data-f="study" value="${esc(D.study)}" ${dis} placeholder="예: 6시간 30분"></div>
+
+        <div class="row" style="margin-top:14px;margin-bottom:6px">
+          <h2 style="margin:0">CHECK LIST</h2>
+          <span class="sp"></span>
+          ${ed ? `
+            <span class="note">형광펜:</span>
+            <div class="sw">
+              ${COLORS.map(c=>`<b data-hl="${c}" class="${c===hlColor?'on':''}" style="background:${c}" title="형광펜 색상 선택"></b>`).join('')}
+              <b data-hl="" class="none-swatch ${hlColor===''?'on':''}" title="형광펜 지우기 모드"></b>
+            </div>
+          ` : `<span class="note">좌측 색상과 타임테이블 색상이 연동됩니다</span>`}
+        </div>
+
+        <div class="ckh"><span>색</span><span>과목</span><span>할 일</span><span>✓</span><span>△</span><span>✕</span></div>
+        <div class="ck">
+          ${D.tasks.map((t,i)=>{
+            const bg = hlBg(t.h);
+            const dotStyle = t.h ? `background:${t.h};border-color:${t.h}` : `background:#fff`;
+            return `
+              <div class="hl-cell ${ed?'':'ro'}" data-hi="${i}" title="${ed?'클릭하여 선택한 형광펜 칠하기/지우기':''}">
+                <span class="hl-dot" style="${dotStyle}"></span>
+              </div>
+              <input class="subj" data-s="${i}" value="${esc(t.s)}" ${dis} style="background:${bg};color:${t.h||'#555'}" placeholder="과목">
+              <input class="todo" data-t="${i}" value="${esc(t.c)}" ${dis} style="background:${bg}" placeholder="공부할 내용 입력">
+              ${MARKS.map((m,k)=>`<button data-k="${i}:${k+1}" class="${t.f==k+1?'on':''}">${m}</button>`).join('')}
+            `;
+          }).join('')}
+        </div>
+
+        <h2 style="margin-top:14px">STUDY DIARY</h2>
+        <textarea data-f="diary" ${dis} placeholder="오늘 공부 어땠나요?">${esc(D.diary)}</textarea>
+      </div>
+
+      <!-- 오른쪽 영역: TIME TABLE -->
+      <div>
+        <h2>TIME TABLE <span class="note">(6시 시작 · 한 칸 10분)</span></h2>
+        <div class="tt">${rows}</div>
+
+        ${ed ? `
+          <div class="card" style="margin-top:10px;padding:12px;box-shadow:none;border:1px solid #e5e5e5">
+            ${quickSubjects.length ? `
+              <div class="note" style="margin-bottom:4px">체크리스트 형광펜 과목 불러오기 (클릭 시 색상·과목 자동 입력)</div>
+              <div class="quick-tags">
+                ${quickSubjects.map(q=>`<button type="button" data-qlabel="${esc(q.label)}" data-qcolor="${q.color}" style="background:${hlBg(q.color)};border-color:${q.color}">● ${esc(q.label)}</button>`).join('')}
+              </div>
+            ` : ''}
+            <div class="row"><input type="time" id="bs" value="09:00"> ~ <input type="time" id="be" value="10:00"></div>
+            <div class="sw" style="margin:8px 0">${COLORS.map(c=>`<b data-c="${c}" class="${c===color?'on':''}" style="background:${c}"></b>`).join('')}</div>
+            <div class="row">
+              <input id="bl" class="sp" placeholder="과목 또는 공부 내용 (예: 수학)">
+              <button class="main" id="badd">추가</button>
+            </div>
+          </div>
+        ` : ''}
+
+        <div style="margin-top:8px">
+          ${D.blocks.map((b,i)=>`
+            <div class="bl">
+              <u style="background:${b.color}"></u>
+              <span>${b.s}~${b.e}</span>
+              <b>${esc(b.label)}</b>
+              ${ed?`<button data-del="${i}" style="padding:2px 9px;margin-left:auto">삭제</button>`:''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+let timer;
+function touch(){
+  clearTimeout(timer);
+  timer = setTimeout(async () => {
+    await store.save(cur, D.date, D);
+    if (D.date.startsWith(ymd(Y,M,1).slice(0,7))) {
+      marks.add(D.date);
+      drawCal();
+    }
+  }, 400);
+}
+
+$('sheet').addEventListener('input', e => {
+  const t = e.target;
+  if (!canEdit()) return;
+  if (t.dataset.f) D[t.dataset.f] = t.value;
+  else if (t.dataset.s !== undefined) D.tasks[t.dataset.s].s = t.value;
+  else if (t.dataset.t !== undefined) D.tasks[t.dataset.t].c = t.value;
+  touch();
+});
+
+$('sheet').addEventListener('click', async e => {
+  const t = e.target.closest('[id],[data-k],[data-c],[data-hl],[data-hi],[data-del],[data-qcolor]');
+  if (!t) return;
+
+  if (t.id === 'lock') {
+    if (canEdit()) unlocked.delete(cur);
+    else {
+      const pw = prompt('비밀번호를 입력하세요');
+      if (!pw) return;
+      if (await hash(cur,pw) === await store.pw(cur)) unlocked.add(cur);
+      else return alert('비밀번호가 달라요 😢');
+    }
+    return drawSheet();
+  }
+
+  if (!canEdit()) return;
+
+  // 체크리스트 달성 기호 (✓, △, ✕)
+  if (t.dataset.k) {
+    const [i,v] = t.dataset.k.split(':');
+    D.tasks[i].f = D.tasks[i].f == v ? 0 : +v;
+    touch();
+    drawSheet();
+  }
+  // 체크리스트 상단 형광펜 팔레트 선택
+  else if (t.dataset.hl !== undefined) {
+    hlColor = t.dataset.hl;
+    drawSheet();
+  }
+  // 체크리스트 개별 행에 형광펜 칠하기/토글
+  else if (t.dataset.hi !== undefined) {
+    const idxRow = +t.dataset.hi;
+    D.tasks[idxRow].h = (D.tasks[idxRow].h === hlColor) ? '' : hlColor;
+    touch();
+    drawSheet();
+  }
+  // 타임테이블 과목 퀵버튼 클릭 시 색상 + 과목명 동시 세팅
+  else if (t.dataset.qcolor) {
+    color = t.dataset.qcolor;
+    const lbl = t.dataset.qlabel;
+    drawSheet();
+    const blInput = $('bl');
+    if (blInput) blInput.value = lbl;
+  }
+  // 타임테이블 팔레트 색상 선택
+  else if (t.dataset.c) {
+    color = t.dataset.c;
+    drawSheet();
+  }
+  // 타임테이블 블록 삭제
+  else if (t.dataset.del !== undefined) {
+    D.blocks.splice(+t.dataset.del,1);
+    touch();
+    drawSheet();
+  }
+  // 타임테이블 블록 추가
+  else if (t.id === 'badd') {
+    const s = $('bs').value, en = $('be').value;
+    if (!s || !en || s === en) return alert('시간을 확인해주세요');
+    D.blocks.push({s, e:en, color, label:$('bl').value.trim() || '공부'});
+    touch();
+    drawSheet();
+  }
+});
+
+loadPlanners();
+</script>
+</body>
+</html>
